@@ -28,7 +28,22 @@ var (
 	config configurer.Config
 	apiVersion = "1.0"
 	apiPath = "/api/" + apiVersion + "/"
+	couchDBUri string
 )
+
+func init() {
+	configPath := flag.String( "c", "", "config file location")
+	flag.Parse()
+
+	if *configPath == "" {
+		fmt.Println( "Config file not found." )
+		os.Exit(1)
+	}
+
+	config = configurer.ParseConfig( *configPath )	
+
+	couchDBUri = config.CouchDB.Protocol + "://" + config.CouchDB.Address + ":" + config.CouchDB.Port + "/" + config.CouchDB.DBName
+}
 
 type Ooops struct {
 	Error	string	`json:"error"`
@@ -73,7 +88,7 @@ func contains( list []string, word string ) bool {
 }
 
 func ApiSetSecretHandler( responseWriter http.ResponseWriter, request *http.Request ) {
-	couchDBUri := config.CouchDB.Protocol + "://" + config.CouchDB.Address + ":" + config.CouchDB.Port + "/" + config.CouchDB.DBName
+	// couchDBUri := config.CouchDB.Protocol + "://" + config.CouchDB.Address + ":" + config.CouchDB.Port + "/" + config.CouchDB.DBName
 
 	contentTypesList := request.Header.Values( "Content-Type" )
 
@@ -127,7 +142,7 @@ func ApiSetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 }
 
 func ApiGetSecretHandler( responseWriter http.ResponseWriter, request *http.Request ) {
-	couchDBUri := config.CouchDB.Protocol + "://" + config.CouchDB.Address + ":" + config.CouchDB.Port + "/" + config.CouchDB.DBName
+	// couchDBUri := config.CouchDB.Protocol + "://" + config.CouchDB.Address + ":" + config.CouchDB.Port + "/" + config.CouchDB.DBName
 
 	contentTypesList := request.Header.Values( "Content-Type" )
 
@@ -279,15 +294,7 @@ func RootHandler( responseWriter http.ResponseWriter, request *http.Request ) {
 }
 
 func main() {
-	configPath := flag.String( "c", "", "config file location")
-	flag.Parse()
 
-	if *configPath == "" {
-		fmt.Println( "Config file not found." )
-		os.Exit(1)
-	}
-
-	config = configurer.ParseConfig( *configPath )
 
 	router := mux.NewRouter()
 	router.HandleFunc( apiPath + "setSecret", ApiSetSecretHandler ).Methods( "POST" )
