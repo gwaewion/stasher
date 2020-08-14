@@ -17,8 +17,12 @@ import (
 )
 
 var (
-	salt = "actuallyThisIsSaltedSugar"
+	salt string
 )
+
+func SetSalt( s string ) {
+	salt = s
+}
 
 func getKey( text string ) []byte {
 	return argon2.IDKey( []byte( text ), []byte( salt ), 1, 64*1024, 4, 32 )

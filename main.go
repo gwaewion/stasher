@@ -41,6 +41,8 @@ func init() {
 	}
 
 	config = configurer.ParseConfig( *configPath )	
+	//add exception check
+	crypter.SetSalt( config.Stasher.Salt )
 
 	couchDBUri = config.CouchDB.Protocol + "://" + config.CouchDB.Address + ":" + config.CouchDB.Port + "/" + config.CouchDB.DBName
 }
@@ -294,8 +296,6 @@ func RootHandler( responseWriter http.ResponseWriter, request *http.Request ) {
 }
 
 func main() {
-
-
 	router := mux.NewRouter()
 	router.HandleFunc( apiPath + "setSecret", ApiSetSecretHandler ).Methods( "POST" )
 	router.HandleFunc( apiPath + "getSecret", ApiGetSecretHandler ).Methods( "POST" )
