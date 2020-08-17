@@ -30,3 +30,5 @@ type DBRecord struct {
 type Hint struct {
 	Url	string	`json:"url"`
 }
+
+type RootHandlerNew struct {}

@@ -203,46 +203,6 @@ func ApiGetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 	errorer.LogError( deleteRequestResponseBodyError )
 }
 
-// func SecretHandler( responseWriter http.ResponseWriter, request *http.Request ) {
-// 	couchDBUri := config.CouchDB.Protocol + "://" + config.CouchDB.Address + ":" + config.CouchDB.Port + "/" + config.CouchDB.DBName
-
-// 	muxerVars := mux.Vars( request )
-// 	id := muxerVars[ "id" ]
-// 	dbRecord, dbRecordError := http.Get( couchDBUri + "/" + id )
-// 	errorer.LogError( dbRecordError )
-
-// 	var secret SetSecret
-// 	var record DBRecord
-	
-// 	recordBody, recordBodyError := ioutil.ReadAll( dbRecord.Body )
-// 	errorer.LogError( recordBodyError )
-
-// 	secretUnmarshalError := json.Unmarshal( recordBody, &secret )
-// 	errorer.LogError( secretUnmarshalError )
-// 	recordUnmarshalError := json.Unmarshal( recordBody, &record )
-// 	errorer.LogError( recordUnmarshalError )
-
-// 	marshaledSecret, marshaledSecretError := json.Marshal( secret )
-// 	errorer.LogError( marshaledSecretError )
-// 	responseWriter.Header().Set( "Content-Type", "application/json" )
-// 	responseWriter.Write( marshaledSecret )
-
-// 	client := &http.Client{}
-// 	deleteRequest, deleteRequestError := http.NewRequest( "DELETE", couchDBUri + "/" + id + "?rev=" + record.Revision, nil )
-// 	errorer.LogError( deleteRequestError )
-// 	deleteRequestResponse, deleteRequestResponseError := client.Do( deleteRequest )
-// 	errorer.LogError( deleteRequestResponseError )
-// 	_, deleteRequestResponseBodyError := ioutil.ReadAll( deleteRequestResponse.Body )
-// 	errorer.LogError( deleteRequestResponseBodyError )
-// }
-
-func SecretJSHandler( responseWriter http.ResponseWriter, request *http.Request ) {
-	webroot := packr.New( "webroot", "./webroot" )
-	secretjs, secretjsError := webroot.Find( "secret.js" )
-	errorer.LogError( secretjsError )
-	responseWriter.Write( secretjs )
-}
-
 func SecretHTMLHandler( responseWriter http.ResponseWriter, request *http.Request ) {
 	webroot := packr.New( "webroot", "./webroot" )
 	secret, secretError := webroot.Find( "secret.html" )
@@ -250,31 +210,33 @@ func SecretHTMLHandler( responseWriter http.ResponseWriter, request *http.Reques
 	responseWriter.Write( secret )
 }
 
-func ScriptHandler( responseWriter http.ResponseWriter, request *http.Request ) {
+func ( rh RootHandlerNew ) ServeHTTP( responseWriter http.ResponseWriter, request *http.Request ) {
+	path := request.URL.Path
 	webroot := packr.New( "webroot", "./webroot" )
-	script, scriptError := webroot.Find( "script.js" )
-	errorer.LogError( scriptError )
-	responseWriter.Write( script )
-}
 
-func RootHandler( responseWriter http.ResponseWriter, request *http.Request ) {
-	webroot := packr.New( "webroot", "./webroot" )
-	index, indexError := webroot.Find( "index.html" )
-	errorer.LogError( indexError )
-	responseWriter.Write( index )
+	if path == "/secret.js" {
+		secretjs, secretjsError := webroot.Find( "secret.js" )
+		errorer.LogError( secretjsError )
+		responseWriter.Write( secretjs )
+	} else if path == "/script.js" {
+		script, scriptError := webroot.Find( "script.js" )
+		errorer.LogError( scriptError )
+		responseWriter.Write( script )
+	} else if path == "/" {
+		index, indexError := webroot.Find( "index.html" )
+		errorer.LogError( indexError )
+		responseWriter.Write( index )
+	} else {
+		responseWriter.WriteHeader( http.StatusNotFound )
+	}
 }
 
 func main() {
 	router := mux.NewRouter()
 	router.HandleFunc( apiPath + "setSecret", ApiSetSecretHandler ).Methods( "POST" )
 	router.HandleFunc( apiPath + "getSecret", ApiGetSecretHandler ).Methods( "POST" )
-	// router.HandleFunc( "/secret/{id}", SecretHandler ).Methods( "GET" )
-	
 	router.HandleFunc( "/secret/{id}", SecretHTMLHandler ).Methods( "GET" ) 
-	router.HandleFunc( "/secret.js", SecretJSHandler ).Methods( "GET" ) 
-	router.HandleFunc( "/script.js", ScriptHandler ).Methods( "GET" )
-	router.HandleFunc( "/", RootHandler ).Methods( "GET" )
-	// router.PathPrefix( "/" ).HandleFunc( RootHandler ).Methods( "GET" )
+	router.PathPrefix( "/" ).Handler( RootHandlerNew{} ).Methods( "GET" )
 
     server := &http.Server{
         Addr:         			config.Stasher.Address + ":" + config.Stasher.Port,
