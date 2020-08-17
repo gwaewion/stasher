@@ -1,4 +1,5 @@
 window.onload = function() {
+	var rootDiv = document.createElement( "div" );
 	var textDiv = document.createElement( "div" );
 	var textArea = document.createElement( "textarea" );
 	var secureDiv = document.createElement( "div" );
@@ -7,6 +8,10 @@ window.onload = function() {
 	var phraseInput = document.createElement( "input" );
 	var buttonDiv = document.createElement( "div" );
 	var button = document.createElement( "button" );
+
+	rootDiv.setAttribute( "id", "rootDiv" );
+
+	textDiv.setAttribute( "id", "textDiv" );
 
 	secureDiv.setAttribute( "id", "secureDiv" );
 
@@ -24,17 +29,20 @@ window.onload = function() {
 	phraseInput.setAttribute( "id", "phraseInput" );
 	phraseInput.style.display = "none";
 
+	buttonDiv.setAttribute( "id", "buttonDiv" );
+
 	button.textContent = "send";
 	button.onclick = send;
 
 	textDiv.append( textArea );
-	document.body.append( textDiv );
+	rootDiv.append( textDiv );
 	secureDiv.append( checkbox );
 	secureDiv.append( checkboxLabel );
 	secureDiv.append( phraseInput );
-	document.body.append( secureDiv );
+	rootDiv.append( secureDiv );
 	buttonDiv.append( button );
-	document.body.append( buttonDiv );
+	rootDiv.append( buttonDiv );
+	document.body.append( rootDiv );
 };
 
 function send() {
@@ -68,18 +76,37 @@ function send() {
 
 function displayLink( hint ) {
 	var parsedHint = JSON.parse( hint );
+	var rootDiv = document.getElementById( "rootDiv" );
+	var buttonDiv = document.createElement( "div" );
+	var button = document.createElement( "button" );
 
-	document.body.innerHTML = "";
+	rootDiv.innerHTML = "";
 
 	var linkDiv = document.createElement( "div" );
 
-	var link = document.createElement( "a" );
+	var link = document.createElement( "input" );
 
-	link.setAttribute( "href",  parsedHint.url );
-	link.innerHTML = "share this";
+	linkDiv.setAttribute( "id", "linkDiv" );
+	buttonDiv.setAttribute( "id", "buttonDiv" );
+	button.textContent = "copy";
+	button.onclick = copy;
+
+	link.setAttribute( "type", "text" );
+	link.setAttribute( "size", parsedHint.url.length + 5 );
+	link.setAttribute( "value",  parsedHint.url );
+	link.setAttribute( "id", "link" );
+	link.setAttribute( "readOnly", "true" );
 
 	linkDiv.append( link );
-	document.body.append( linkDiv );
+	buttonDiv.append( button );
+	rootDiv.append( linkDiv );
+	rootDiv.append( buttonDiv );
+}
+
+function copy() {
+	var link = document.getElementById( "link" );
+	link.select();
+	document.execCommand( "copy" );
 }
 
 function showPhraseInput() {

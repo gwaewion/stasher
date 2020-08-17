@@ -59,19 +59,15 @@ func contains( list []string, word string ) bool {
 }
 
 func ApiSetSecretHandler( responseWriter http.ResponseWriter, request *http.Request ) {
-	// couchDBUri := config.CouchDB.Protocol + "://" + config.CouchDB.Address + ":" + config.CouchDB.Port + "/" + config.CouchDB.DBName
-
 	contentTypesList := request.Header.Values( "Content-Type" )
 
 	if !( contains( contentTypesList, "application/json" ) ) {
-		// responseWriter.Header().Set( "Content-Type", "application/json" )
 		responseWriter.WriteHeader( http.StatusUnsupportedMediaType )
 		return
 	}
 
 	requestBody, requestBodyError := ioutil.ReadAll( request.Body )
     if requestBodyError != nil {
-		// responseWriter.Header().Set( "Content-Type", "application/json" )
 		responseWriter.WriteHeader( http.StatusBadRequest )
 		return
     }
@@ -79,7 +75,6 @@ func ApiSetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
     var secret SetSecret
     secretUnmarshalError := json.Unmarshal( requestBody, &secret ) 
 	if secretUnmarshalError != nil || secret.Message == "" {
-		// responseWriter.Header().Set( "Content-Type", "application/json" )
 		responseWriter.WriteHeader( http.StatusBadRequest )
 		return
     }
@@ -113,19 +108,15 @@ func ApiSetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 }
 
 func ApiGetSecretHandler( responseWriter http.ResponseWriter, request *http.Request ) {
-	// couchDBUri := config.CouchDB.Protocol + "://" + config.CouchDB.Address + ":" + config.CouchDB.Port + "/" + config.CouchDB.DBName
-
 	contentTypesList := request.Header.Values( "Content-Type" )
 
 	if !( contains( contentTypesList, "application/json" ) ) {
-		// responseWriter.Header().Set( "Content-Type", "application/json" )
 		responseWriter.WriteHeader( http.StatusUnsupportedMediaType )
 		return
 	}
 
 	requestBody, requestBodyError := ioutil.ReadAll( request.Body )
     if requestBodyError != nil {
-		// responseWriter.Header().Set( "Content-Type", "application/json" )
 		responseWriter.WriteHeader( http.StatusBadRequest )
 		return
     }
@@ -133,7 +124,6 @@ func ApiGetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
     var secret GetSecret
     secretUnmarshalError := json.Unmarshal( requestBody, &secret ) 
 	if secretUnmarshalError != nil || secret.Id == "" { //what if secret ID existst but wrong?
-		// responseWriter.Header().Set( "Content-Type", "application/json" )
 		responseWriter.WriteHeader( http.StatusBadRequest )
 		return
     }
@@ -159,8 +149,6 @@ func ApiGetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 	errorer.LogError( recordUnmarshalError )
 
 	var message string
-	fmt.Printf( "%#v\n", secret )
-	fmt.Printf( "%#v\n", record )
 
 	if secret.Phrase != "" && record.Secure {
 		if hasher.IsTextCorrect( secret.Phrase, record.PhraseHash ) {
@@ -184,7 +172,6 @@ func ApiGetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 		return	
 	}
 
-	fmt.Printf( "%#v\n", message )
 	if message == "" {
 		message = record.Message
 	}
