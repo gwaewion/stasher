@@ -209,6 +209,10 @@ func ( rh RootHandlerNew ) ServeHTTP( responseWriter http.ResponseWriter, reques
 		script, scriptError := webroot.Find( "script.js" )
 		errorer.LogError( scriptError )
 		responseWriter.Write( script )
+	} else if path == "/style.css" {
+		style, styleError := webroot.Find( "style.css" )
+		errorer.LogError( styleError )
+		responseWriter.Write( style )
 	} else if path == "/" {
 		index, indexError := webroot.Find( "index.html" )
 		errorer.LogError( indexError )

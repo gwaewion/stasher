@@ -1,15 +1,22 @@
 window.onload = function() {
+	var rootDiv = document.createElement( "div" );
 	var textDiv = document.createElement( "div" );
 	var buttonDiv = document.createElement( "div" );
 	var button = document.createElement( "button" );
 
+	rootDiv.setAttribute( "id", "rootDiv" );
+
+	buttonDiv.setAttribute( "id", "buttonDivSecret" );
 	button.textContent = "show";
 	button.onclick = show;
 
+	textDiv.setAttribute( "id", "textDivSecret" );
 	textDiv.innerHTML = "show message?";
-	document.body.append( textDiv );
+	
+	rootDiv.append( textDiv );
 	buttonDiv.append( button );
-	document.body.append( buttonDiv );
+	rootDiv.append( buttonDiv );
+	document.body.append( rootDiv );
 };
 
 function show() {
@@ -42,18 +49,21 @@ function show() {
 
 function displayMessage( hint ) {
 	var parsedHint = JSON.parse( hint );
+	var rootDiv = document.getElementById( "rootDiv" );
 
-	document.body.innerHTML = "";
+	rootDiv.innerHTML = "";
 
 	var messageDiv = document.createElement( "div" );
 
 	messageDiv.innerHTML = parsedHint.message;
 
-	document.body.append( messageDiv );
+	rootDiv.append( messageDiv );
 }
 
 function askPhrase( id ) {
-	document.body.innerHTML = "";
+	var rootDiv = document.getElementById( "rootDiv" );
+
+	rootDiv.innerHTML = "";
 
 	var phraseDiv = document.createElement( "div" );
 	var phraseInput = document.createElement( "input" );
@@ -91,5 +101,5 @@ function askPhrase( id ) {
 
 	phraseDiv.append( phraseInput );
 	phraseDiv.append( button );
-	document.body.append( phraseDiv );
+	rootDiv.append( phraseDiv );
 }
