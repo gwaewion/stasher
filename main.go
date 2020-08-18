@@ -1,8 +1,6 @@
-//TODO: use single HTTP client
-//TODO: add background mode as default
 //TODO: add logs out to stderr as default
 //TODO: add logging to file
-//TODO: add debug mode with more werbove output
+//TODO: add debug mode with more verbose output
 //TODO: add using secure connection to couchdb
 //TODO: add encryption of every secret
 //TODO: add graceful shutdown
@@ -15,11 +13,9 @@ import (
 	"time"
 	"log"
 	"encoding/json"
-	"io/ioutil"
-	// "io"
+	// "io/ioutil"
 	"fmt"
-	"bytes"
-	"strings"
+	// "bytes"
 	"flag"
 	"os"
 
@@ -60,32 +56,13 @@ func init() {
 	httpClient = http.Client{}
 }
 
-func contains( list []string, word string ) bool {
-	lowerWord := strings.ToLower( word )
-	realList := strings.Split( list[0], ";")
-	for _, element := range realList {
-		if lowerWord == strings.ToLower( element ) {
-			return true
-		}
-	}
-	return false
-}
 
 func ApiSetSecretHandler( responseWriter http.ResponseWriter, request *http.Request ) {
-	contentTypesList := request.Header.Values( "Content-Type" )
-
-	if !( contains( contentTypesList, "application/json" ) ) {
-		responseWriter.WriteHeader( http.StatusUnsupportedMediaType )
-		return
-	}
-
-	requestBody, requestBodyError := ioutil.ReadAll( request.Body )
-    if requestBodyError != nil {
-		responseWriter.WriteHeader( http.StatusBadRequest )
-		return
-    }
+	requestBody, requestBodyError := conditionCheck( responseWriter, request )
+	errorer.LogError( requestBodyError ) 
 
     var secret SetSecret
+
     secretUnmarshalError := json.Unmarshal( requestBody, &secret ) 
 	if secretUnmarshalError != nil || secret.Message == "" {
 		responseWriter.WriteHeader( http.StatusBadRequest )
@@ -99,78 +76,45 @@ func ApiSetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 		hash := hasher.GetHash( secret.Phrase )
 		securedMessage := crypter.Crypt( secret.Phrase, secret.Message )
 		record = DBRecord{ Id: id, Message: securedMessage, Secure: true, PhraseHash: hash, CreatedAt: time.Now().Format( time.RFC3339 ) }
-		// fmt.Println( crypter.Decrypt( secret.Phrase, securedMessage ) )
 	} else {
 		record = DBRecord{ Id: id, Message: secret.Message, CreatedAt: time.Now().Format( time.RFC3339 ) }
 	}
+
 	marshaledRecord, marshaledRecordError := json.Marshal( record )
 	errorer.LogError( marshaledRecordError )
 
-	dbRecordRequest, dbRecordRequestError := http.NewRequest( "POST", couchDBUri, bytes.NewReader( marshaledRecord ) )
-	errorer.LogError( dbRecordRequestError )
-	dbRecordRequest.Header.Add( "Content-Type", "application/json" )
-	dbRecordResponse, dbRecordResponseError := httpClient.Do( dbRecordRequest )
-	errorer.LogError( dbRecordResponseError )
-	defer dbRecordResponse.Body.Close()
+	recordStatusCode, _ := makeRequest( httpClient, "post", couchDBUri, marshaledRecord )
 
-	// recordResponse, recordResponseError := http.Post( couchDBUri, "application/json", bytes.NewReader( marshaledRecord ) )
-	// errorer.LogError( recordResponseError )
-	// defer recordResponse.Body.Close()
-
-	if dbRecordResponse.StatusCode == 201 {
+	if recordStatusCode == 201 {
 		url := "http://" + config.Stasher.Address + ":" + config.Stasher.Port + "/secret/"
-		hint, hintError := json.Marshal( Hint{ Url: url + id } )
-		errorer.LogError( hintError )
-		responseWriter.Header().Set( "Content-Type", "application/json" )
-		responseWriter.WriteHeader( http.StatusCreated )
-		responseWriter.Write( hint )
+		sendJSON( responseWriter, Hint{ Url: url + id }, 200 )
 	} else {
-		log.Fatalf( "Response code is %v", dbRecordResponse.StatusCode )
+		log.Fatalf( "Response code is %v", recordStatusCode )
 	}
 }
 
 func ApiGetSecretHandler( responseWriter http.ResponseWriter, request *http.Request ) {
-	contentTypesList := request.Header.Values( "Content-Type" )
-
-	if !( contains( contentTypesList, "application/json" ) ) {
-		responseWriter.WriteHeader( http.StatusUnsupportedMediaType )
-		return
-	}
-
-	requestBody, requestBodyError := ioutil.ReadAll( request.Body )
-    if requestBodyError != nil {
-		responseWriter.WriteHeader( http.StatusBadRequest )
-		return
-    }
+	requestBody, requestBodyError := conditionCheck( responseWriter, request )
+	errorer.LogError( requestBodyError ) 
 
     var secret GetSecret
+
     secretUnmarshalError := json.Unmarshal( requestBody, &secret ) 
-	if secretUnmarshalError != nil || secret.Id == "" { //what if secret ID existst but wrong?
+	if secretUnmarshalError != nil || secret.Id == "" { 
 		responseWriter.WriteHeader( http.StatusBadRequest )
 		return
     }
 
-	dbRecordRequest, dbRecordRequestError := http.NewRequest( "GET", couchDBUri + "/" + secret.Id, nil )
-	errorer.LogError( dbRecordRequestError )
-	dbRecordResponse, dbRecordResponseError := httpClient.Do( dbRecordRequest )
-	errorer.LogError( dbRecordResponseError )
-	defer dbRecordResponse.Body.Close()
+	secretStatusCode, secretBody := makeRequest( httpClient, "get", couchDBUri + "/" + secret.Id, nil )
 
-	if dbRecordResponse.StatusCode != 200 {
-		marshaledOoops, marshaledOoopsError := json.Marshal( Ooops{ Error: "secret not exists" } )
-		errorer.LogError( marshaledOoopsError )
-
-		responseWriter.Header().Set( "Content-Type", "application/json" )
-		responseWriter.WriteHeader( http.StatusNotFound )
-		responseWriter.Write( marshaledOoops)
+	if secretStatusCode != 200 {
+		errorer.Ooopsie( responseWriter, "secret not exists", 404 )
 		return
 	}
 
 	var record DBRecord
 	
-	recordBody, recordBodyError := ioutil.ReadAll( dbRecordResponse.Body )
-	errorer.LogError( recordBodyError )
-	recordUnmarshalError := json.Unmarshal( recordBody, &record )
+	recordUnmarshalError := json.Unmarshal( secretBody, &record )
 	errorer.LogError( recordUnmarshalError )
 
 	var message string
@@ -179,41 +123,22 @@ func ApiGetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 		if hasher.IsTextCorrect( secret.Phrase, record.PhraseHash ) {
 			message = crypter.Decrypt( secret.Phrase, record.Message )
 		} else {
-			marshaledOoops, marshaledOoopsError := json.Marshal( Ooops{ Error: "wrong phrase" } )
-			errorer.LogError( marshaledOoopsError )
-
-			responseWriter.Header().Set( "Content-Type", "application/json" )
-			responseWriter.WriteHeader( http.StatusBadRequest )
-			responseWriter.Write( marshaledOoops )
+			errorer.Ooopsie( responseWriter, "wrong phrase", 400 )
 			return
 		}
 	} else if  secret.Phrase == "" && record.Secure {
-		marshaledOoops, marshaledOoopsError := json.Marshal( Ooops{ Error: "no phrase" } )
-		errorer.LogError( marshaledOoopsError )
-
-		responseWriter.Header().Set( "Content-Type", "application/json" )
-		responseWriter.WriteHeader( http.StatusBadRequest )
-		responseWriter.Write( marshaledOoops )
+		errorer.Ooopsie( responseWriter, "no phrase", 400 )
 		return	
 	}
 
 	if message == "" {
 		message = record.Message
 	}
-	marshaledSecret, marshaledSecretError := json.Marshal( Secret{ Message: message } )
-	errorer.LogError( marshaledSecretError )
 
-	responseWriter.Header().Set( "Content-Type", "application/json" )
-	responseWriter.Write( marshaledSecret )	
+	sendJSON( responseWriter, Secret{ Message: message }, 200 )
 
-	deleteRequest, deleteRequestError := http.NewRequest( "DELETE", couchDBUri + "/" + secret.Id + "?rev=" + record.Revision, nil )
-	errorer.LogError( deleteRequestError )
-	deleteRequestResponse, deleteRequestResponseError := httpClient.Do( deleteRequest )
-	errorer.LogError( deleteRequestResponseError )
-	defer deleteRequestResponse.Body.Close()
+	_, _ = makeRequest( httpClient, "delete", couchDBUri + "/" + secret.Id + "?rev=" + record.Revision, nil )
 
-	_, deleteRequestResponseBodyError := ioutil.ReadAll( deleteRequestResponse.Body )
-	errorer.LogError( deleteRequestResponseBodyError )
 }
 
 func SecretHTMLHandler( responseWriter http.ResponseWriter, request *http.Request ) {

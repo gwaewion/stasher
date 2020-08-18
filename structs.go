@@ -1,9 +1,5 @@
 package main
 
-type Ooops struct {
-	Error	string	`json:"error"`
-}
-
 type Secret struct {
 	Message	string	`json:"message"`	
 }

@@ -96,6 +96,8 @@ function askPhrase( id ) {
 				askPhrase( id );
 			} else if ( errorMessage.error == "wrong phrase" ) {
 				alert( "wrong phrase" );
+			} else if ( errorMessage.error == "secret not exists" && xhr.status == 404 ) {
+			alert( "secret deleted" );
 			}
 		}
 	};
