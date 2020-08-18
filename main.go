@@ -1,3 +1,13 @@
+//TODO: use single HTTP client
+//TODO: add background mode as default
+//TODO: add logs out to stderr as default
+//TODO: add logging to file
+//TODO: add debug mode with more werbove output
+//TODO: add using secure connection to couchdb
+//TODO: add encryption of every secret
+//TODO: add graceful shutdown
+//TODO: make variables names more logical
+
 package main
 
 import (
@@ -29,6 +39,7 @@ var (
 	apiVersion = "1.0"
 	apiPath = "/api/" + apiVersion + "/"
 	couchDBUri string
+	httpClient http.Client
 )
 
 func init() {
@@ -45,6 +56,8 @@ func init() {
 	crypter.SetSalt( config.Stasher.Salt )
 
 	couchDBUri = config.CouchDB.Protocol + "://" + config.CouchDB.Address + ":" + config.CouchDB.Port + "/" + config.CouchDB.DBName
+
+	httpClient = http.Client{}
 }
 
 func contains( list []string, word string ) bool {
@@ -93,9 +106,18 @@ func ApiSetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 	marshaledRecord, marshaledRecordError := json.Marshal( record )
 	errorer.LogError( marshaledRecordError )
 
-	recordResponse, recordResponseError := http.Post( couchDBUri, "application/json", bytes.NewReader( marshaledRecord ) )
-	errorer.LogError( recordResponseError )
-	if recordResponse.StatusCode == 201 {
+	dbRecordRequest, dbRecordRequestError := http.NewRequest( "POST", couchDBUri, bytes.NewReader( marshaledRecord ) )
+	errorer.LogError( dbRecordRequestError )
+	dbRecordRequest.Header.Add( "Content-Type", "application/json" )
+	dbRecordResponse, dbRecordResponseError := httpClient.Do( dbRecordRequest )
+	errorer.LogError( dbRecordResponseError )
+	defer dbRecordResponse.Body.Close()
+
+	// recordResponse, recordResponseError := http.Post( couchDBUri, "application/json", bytes.NewReader( marshaledRecord ) )
+	// errorer.LogError( recordResponseError )
+	// defer recordResponse.Body.Close()
+
+	if dbRecordResponse.StatusCode == 201 {
 		url := "http://" + config.Stasher.Address + ":" + config.Stasher.Port + "/secret/"
 		hint, hintError := json.Marshal( Hint{ Url: url + id } )
 		errorer.LogError( hintError )
@@ -103,7 +125,7 @@ func ApiSetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 		responseWriter.WriteHeader( http.StatusCreated )
 		responseWriter.Write( hint )
 	} else {
-		log.Fatalf( "Response code is %v", recordResponse.StatusCode )
+		log.Fatalf( "Response code is %v", dbRecordResponse.StatusCode )
 	}
 }
 
@@ -128,10 +150,13 @@ func ApiGetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 		return
     }
 
-	dbRecord, dbRecordError := http.Get( couchDBUri + "/" + secret.Id )
-	errorer.LogError( dbRecordError )
+	dbRecordRequest, dbRecordRequestError := http.NewRequest( "GET", couchDBUri + "/" + secret.Id, nil )
+	errorer.LogError( dbRecordRequestError )
+	dbRecordResponse, dbRecordResponseError := httpClient.Do( dbRecordRequest )
+	errorer.LogError( dbRecordResponseError )
+	defer dbRecordResponse.Body.Close()
 
-	if dbRecord.StatusCode != 200 {
+	if dbRecordResponse.StatusCode != 200 {
 		marshaledOoops, marshaledOoopsError := json.Marshal( Ooops{ Error: "secret not exists" } )
 		errorer.LogError( marshaledOoopsError )
 
@@ -143,7 +168,7 @@ func ApiGetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 
 	var record DBRecord
 	
-	recordBody, recordBodyError := ioutil.ReadAll( dbRecord.Body )
+	recordBody, recordBodyError := ioutil.ReadAll( dbRecordResponse.Body )
 	errorer.LogError( recordBodyError )
 	recordUnmarshalError := json.Unmarshal( recordBody, &record )
 	errorer.LogError( recordUnmarshalError )
@@ -181,11 +206,12 @@ func ApiGetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 	responseWriter.Header().Set( "Content-Type", "application/json" )
 	responseWriter.Write( marshaledSecret )	
 
-	client := &http.Client{}
 	deleteRequest, deleteRequestError := http.NewRequest( "DELETE", couchDBUri + "/" + secret.Id + "?rev=" + record.Revision, nil )
 	errorer.LogError( deleteRequestError )
-	deleteRequestResponse, deleteRequestResponseError := client.Do( deleteRequest )
+	deleteRequestResponse, deleteRequestResponseError := httpClient.Do( deleteRequest )
 	errorer.LogError( deleteRequestResponseError )
+	defer deleteRequestResponse.Body.Close()
+
 	_, deleteRequestResponseBodyError := ioutil.ReadAll( deleteRequestResponse.Body )
 	errorer.LogError( deleteRequestResponseBodyError )
 }

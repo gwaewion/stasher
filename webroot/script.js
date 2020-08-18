@@ -80,7 +80,7 @@ function displayLink( hint ) {
 	var buttonDiv = document.createElement( "div" );
 	var button = document.createElement( "button" );
 
-	rootDiv.innerHTML = "";
+	// rootDiv.innerHTML = "";
 
 	var linkDiv = document.createElement( "div" );
 

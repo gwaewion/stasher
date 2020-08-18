@@ -3,7 +3,7 @@ div#rootDiv {
     border-style: dashed;
     margin-left: 10%;
     margin-right: 10%;
-    margin-top: 50px;
+    /*margin-top: 50px;*/
     margin-bottom: 50px;
     height: 80%;
     min-height: 350px;
@@ -54,8 +54,8 @@ textarea#textArea {
 
 div#linkDiv {
 	text-align: center;
-	padding-top: 200;
-	margin-bottom: 30;
+	padding-top: 20;
+	margin-bottom: 20;
 }
 
 input#link {

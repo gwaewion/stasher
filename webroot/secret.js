@@ -1,3 +1,5 @@
+var id;
+
 window.onload = function() {
 	var rootDiv = document.createElement( "div" );
 	var textDiv = document.createElement( "div" );
@@ -21,7 +23,7 @@ window.onload = function() {
 
 function show() {
 	var pathArray = window.location.pathname.split('/');
-	var id = pathArray[ pathArray.length - 1 ];
+	id = pathArray[ pathArray.length - 1 ];
 
 	var xhr = new XMLHttpRequest();
 
@@ -91,7 +93,7 @@ function askPhrase( id ) {
 		} else if ( xhr.status == 400 ) {
 			var errorMessage = JSON.parse( xhr.response );
 			if ( errorMessage.error == "no phrase" ) {
-				askPhrase();
+				askPhrase( id );
 			} else if ( errorMessage.error == "wrong phrase" ) {
 				alert( "wrong phrase" );
 			}
