@@ -21,10 +21,13 @@ type StasherSection struct {
 }
 
 type CouchDBSection struct {
-	Protocol	string `yaml:"protocol"`
-	Address	string `yaml:"address"`
-	Port			string `yaml:"port"`
-	DBName	string `yaml:"dbname"`
+	Protocol		string 	`yaml:"protocol"`
+	Address		string 	`yaml:"address"`
+	Port				string 	`yaml:"port"`
+	DBName		string	`yaml:"dbname"`
+	Username	string	`yaml:"username"`
+	Password	string	`yaml:"password"`
+	CertCheck	bool		`yaml:"cert_check"`
 }
 
 //add check for not empty values

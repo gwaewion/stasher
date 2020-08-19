@@ -3,7 +3,10 @@ stasher:
   port: "8080"
   salt: "longAndSecureSalt"
 couchdb:
-  protocol: "http"
-  address: "127.0.0.1"
-  port: "5984"
+  protocol: "https"
+  address: "localhost"
+  port: "6984"
   dbname: "stasher"
+  username: "stasher"
+  password: "stasher"
+  cert_check: false

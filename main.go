@@ -5,6 +5,7 @@
 //TODO: add encryption of every secret
 //TODO: add graceful shutdown
 //TODO: make variables names more logical
+//TODO: add check of config variables
 
 package main
 
@@ -18,6 +19,7 @@ import (
 	// "bytes"
 	"flag"
 	"os"
+	"crypto/tls"
 
 	"stasher/errorer"
 	"stasher/configurer"
@@ -51,9 +53,13 @@ func init() {
 	//add exception check
 	crypter.SetSalt( config.Stasher.Salt )
 
-	couchDBUri = config.CouchDB.Protocol + "://" + config.CouchDB.Address + ":" + config.CouchDB.Port + "/" + config.CouchDB.DBName
+	couchDBUri = config.CouchDB.Protocol + "://" + config.CouchDB.Username + ":" + config.CouchDB.Password + "@" + config.CouchDB.Address + ":" + config.CouchDB.Port + "/" + config.CouchDB.DBName
 
-	httpClient = http.Client{}
+	if config.CouchDB.CertCheck == true {
+		httpClient = http.Client{}
+	} else {
+		httpClient = http.Client{ Transport: &http.Transport{ TLSClientConfig: &tls.Config{ InsecureSkipVerify: true }, } }
+	}
 }
 
 
@@ -87,7 +93,7 @@ func ApiSetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 
 	if recordStatusCode == 201 {
 		url := "http://" + config.Stasher.Address + ":" + config.Stasher.Port + "/secret/"
-		sendJSON( responseWriter, Hint{ Url: url + id }, 200 )
+		sendJSON( responseWriter, Hint{ Url: url + id }, 201 )
 	} else {
 		log.Fatalf( "Response code is %v", recordStatusCode )
 	}
@@ -163,6 +169,7 @@ func ( rh RootHandlerNew ) ServeHTTP( responseWriter http.ResponseWriter, reques
 	} else if path == "/style.css" {
 		style, styleError := webroot.Find( "style.css" )
 		errorer.LogError( styleError )
+		responseWriter.Header().Set( "Content-Type", "text/css" )
 		responseWriter.Write( style )
 	} else if path == "/" {
 		index, indexError := webroot.Find( "index.html" )
