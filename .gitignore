@@ -1,5 +1,5 @@
-stasher
+/stasher
 packrd/
-main-packr.go
-config.yml
+/main-packr.go
+/config.yml
 
