@@ -92,7 +92,7 @@ func ApiSetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 	recordStatusCode, _ := makeRequest( httpClient, "post", couchDBUri, marshaledRecord )
 
 	if recordStatusCode == 201 {
-		url := "http://" + config.Hostname + "/secret/"
+		url := "http://" + config.Stasher.Hostname + "/secret/"
 		sendJSON( responseWriter, Hint{ Url: url + id }, 201 )
 	} else {
 		log.Fatalf( "Response code is %v", recordStatusCode )
