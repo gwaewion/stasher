@@ -15,9 +15,10 @@ type Config struct {
 }
 
 type StasherSection struct {
-	Address	string	`yaml:"address"`
-	Port			string	`yaml:"port"`
-	Salt			string	`yaml:"salt"`
+	Address		string	`yaml:"address"`
+	Port				string	`yaml:"port"`
+	Salt				string	`yaml:"salt"`
+	Hostname	string	`yaml:"hostname"`
 }
 
 type CouchDBSection struct {
