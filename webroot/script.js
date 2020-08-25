@@ -6,7 +6,7 @@ window.onload = function() {
 	var checkbox = document.createElement( "input" );
 	var checkboxLabel = document.createElement( "label" );
 	var phraseInput = document.createElement( "input" );
-	var buttonDiv = document.createElement( "div" );
+	var buttonSecureDiv = document.createElement( "div" );
 	var button = document.createElement( "button" );
 
 	rootDiv.setAttribute( "id", "rootDiv" );
@@ -29,9 +29,10 @@ window.onload = function() {
 	phraseInput.setAttribute( "id", "phraseInput" );
 	phraseInput.style.display = "none";
 
-	buttonDiv.setAttribute( "id", "buttonDiv" );
+	buttonSecureDiv.setAttribute( "id", "buttonSecureDiv" );
 
 	button.textContent = "send";
+	button.setAttribute( "id", "buttonSend" );
 	button.onclick = send;
 
 	textDiv.append( textArea );
@@ -40,13 +41,14 @@ window.onload = function() {
 	secureDiv.append( checkboxLabel );
 	secureDiv.append( phraseInput );
 	rootDiv.append( secureDiv );
-	buttonDiv.append( button );
-	rootDiv.append( buttonDiv );
+	buttonSecureDiv.append( button );
+	rootDiv.append( buttonSecureDiv );
 	document.body.append( rootDiv );
 };
 
 function send() {
 	var text = document.getElementById( "textArea" ).value;
+	var buttonSend = document.getElementById( "buttonSend" );
 	var xhr = new XMLHttpRequest();
 
 	var checkbox = document.getElementById( "checkbox" );
@@ -77,6 +79,8 @@ function send() {
 function displayLink( hint ) {
 	var parsedHint = JSON.parse( hint );
 	var rootDiv = document.getElementById( "rootDiv" );
+	var secureDiv = document.getElementById( "secureDiv" );
+	var buttonSecureDiv = document.getElementById( "buttonSecureDiv" );
 	var buttonDiv = document.createElement( "div" );
 	var button = document.createElement( "button" );
 
@@ -96,6 +100,9 @@ function displayLink( hint ) {
 	link.setAttribute( "value",  parsedHint.url );
 	link.setAttribute( "id", "link" );
 	link.setAttribute( "readOnly", "true" );
+
+	secureDiv.remove();
+	buttonSecureDiv.remove();
 
 	linkDiv.append( link );
 	buttonDiv.append( button );
