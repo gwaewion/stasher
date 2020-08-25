@@ -41,7 +41,7 @@ func getRandSpecial() string {
 func GenerateID( length int ) string {
 	var id string
 
-	for i := 0; i <= length; i++ {
+	for i := 0; i <= length - 1; i++ {
 		r := randomizator.Intn(2)
 
 		if r == 0 {

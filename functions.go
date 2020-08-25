@@ -48,7 +48,7 @@ func makeRequest( httpClient http.Client, method, uri string, payload []byte ) (
 		request, requestError = http.NewRequest( method, uri, bytes.NewReader( payload ) )
 		errorer.LogError( requestError )
 		request.Header.Add( "Content-Type", "application/json" )
-	} else if method == "GET" || method == "DELETE" {
+	} else if method == "GET" || method == "DELETE" || method == "HEAD" {
 		request, requestError = http.NewRequest( method, uri, nil )
 		errorer.LogError( requestError )
 	}

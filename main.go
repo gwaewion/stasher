@@ -20,6 +20,7 @@ import (
 	"flag"
 	"os"
 	"crypto/tls"
+	"strings"
 
 	"stasher/errorer"
 	"stasher/configurer"
@@ -39,6 +40,7 @@ var (
 	apiPath = "/api/" + apiVersion + "/"
 	couchDBUri string
 	httpClient http.Client
+	idSize = 8
 )
 
 func init() {
@@ -77,7 +79,7 @@ func ApiSetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
     }
 
 	// id := uuid.New().String()
-	id := passgen.GenerateID( 8 )
+	id := passgen.GenerateID( idSize )
 	var record DBRecord
 
 	if secret.Phrase != "" {
@@ -94,8 +96,7 @@ func ApiSetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 	recordStatusCode, _ := makeRequest( httpClient, "post", couchDBUri, marshaledRecord )
 
 	if recordStatusCode == 201 {
-		url := "http://" + config.Stasher.Hostname + "/secret/"
-		sendJSON( responseWriter, Hint{ Url: url + id }, 201 )
+		sendJSON( responseWriter, Hint{ Url: config.Stasher.Hostname + "/" + id }, 201 )
 	} else {
 		log.Fatalf( "Response code is %v", recordStatusCode )
 	}
@@ -149,13 +150,6 @@ func ApiGetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 
 }
 
-func SecretHTMLHandler( responseWriter http.ResponseWriter, request *http.Request ) {
-	webroot := packr.New( "webroot", "./webroot" )
-	secret, secretError := webroot.Find( "secret.html" )
-	errorer.LogError( secretError )
-	responseWriter.Write( secret )
-}
-
 func ( rh RootHandlerNew ) ServeHTTP( responseWriter http.ResponseWriter, request *http.Request ) {
 	path := request.URL.Path
 	webroot := packr.New( "webroot", "./webroot" )
@@ -178,7 +172,21 @@ func ( rh RootHandlerNew ) ServeHTTP( responseWriter http.ResponseWriter, reques
 		errorer.LogError( indexError )
 		responseWriter.Write( index )
 	} else {
-		responseWriter.WriteHeader( http.StatusNotFound )
+		trimmedPath := strings.TrimLeft( path, "/" )
+
+		if len( trimmedPath ) == idSize {
+			headResponseCode, _ := makeRequest( httpClient, "head", couchDBUri + "/" + trimmedPath, nil )
+
+			if headResponseCode == 200 {
+					secret, secretError := webroot.Find( "secret.html" )
+					errorer.LogError( secretError )
+					responseWriter.Write( secret )
+			} else {
+				responseWriter.WriteHeader( http.StatusNotFound )	
+			} 
+		} else {
+			responseWriter.WriteHeader( http.StatusNotFound )
+		}
 	}
 }
 
@@ -186,7 +194,6 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc( apiPath + "setSecret", ApiSetSecretHandler ).Methods( "POST" )
 	router.HandleFunc( apiPath + "getSecret", ApiGetSecretHandler ).Methods( "POST" )
-	router.HandleFunc( "/secret/{id}", SecretHTMLHandler ).Methods( "GET" ) 
 	router.PathPrefix( "/" ).Handler( RootHandlerNew{} ).Methods( "GET" )
 
     server := &http.Server{
