@@ -25,9 +25,10 @@ import (
 	"stasher/configurer"
 	"stasher/hasher"
 	"stasher/crypter"
+	"stasher/passgen"
 
 	"github.com/gorilla/mux"
-	"github.com/google/uuid"
+	// "github.com/google/uuid"
 	"github.com/gobuffalo/packr/v2"
 
 )
@@ -75,7 +76,8 @@ func ApiSetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 		return
     }
 
-	id := uuid.New().String()
+	// id := uuid.New().String()
+	id := passgen.GenerateID( 8 )
 	var record DBRecord
 
 	if secret.Phrase != "" {
