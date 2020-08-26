@@ -20,6 +20,7 @@ stasher:
   port: "8080"
   salt: "longAndSecureSalt"
   hostname: "127.0.0.1:8080"
+  scheme: "http"
 couchdb:
   protocol: "https"
   address: "localhost"
