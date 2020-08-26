@@ -96,9 +96,9 @@ func ApiSetSecretHandler( responseWriter http.ResponseWriter, request *http.Requ
 	recordStatusCode, _ := makeRequest( httpClient, "post", couchDBUri, marshaledRecord )
 
 	if recordStatusCode == 201 {
-		webUrl := config.Stasher.Scheme + "://" + config.Stasher.Hostname + "/" + id
-		apiUrl := config.Stasher.Scheme + "://" + config.Stasher.Hostname + apiPath + id
-		sendJSON( responseWriter, Hint{ WebUrl: webUrl, ApiUrl: apiUrl }, 201 )
+		web := config.Stasher.Scheme + "://" + config.Stasher.Hostname + "/" + id
+		apiUrl := config.Stasher.Scheme + "://" + config.Stasher.Hostname + apiPath + "getSecret"
+		sendJSON( responseWriter, Hint{ Web: web, ApiHint: ApiHint{ Url: apiUrl, Id: id } }, 201 )
 	} else {
 		log.Fatalf( "Response code is %v", recordStatusCode )
 	}
@@ -160,6 +160,10 @@ func ( rh RootHandlerNew ) ServeHTTP( responseWriter http.ResponseWriter, reques
 		secretjs, secretjsError := webroot.Find( "secret.js" )
 		errorer.LogError( secretjsError )
 		responseWriter.Write( secretjs )
+	} else if path == "/favicon.ico" {
+		icon, iconError := webroot.Find( "favicon.ico" )
+		errorer.LogError( iconError )
+		responseWriter.Write( icon )
 	} else if path == "/script.js" {
 		script, scriptError := webroot.Find( "script.js" )
 		errorer.LogError( scriptError )

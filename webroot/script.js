@@ -96,8 +96,8 @@ function displayLink( hint ) {
 	button.onclick = copy;
 
 	link.setAttribute( "type", "text" );
-	link.setAttribute( "size", parsedHint.web_url.length + 5 );
-	link.setAttribute( "value",  parsedHint.web_url );
+	link.setAttribute( "size", parsedHint.web.length + 5 );
+	link.setAttribute( "value",  parsedHint.web );
 	link.setAttribute( "id", "link" );
 	link.setAttribute( "readOnly", "true" );
 

@@ -10,8 +10,8 @@ import (
 )
 
 type Config struct {
-	Stasher	StasherSection		`yaml:"stasher"`
-	CouchDB	CouchDBSection	`yaml:"couchdb"`
+	Stasher		StasherSection		`yaml:"stasher"`
+	CouchDB		CouchDBSection	`yaml:"couchdb"`
 }
 
 type StasherSection struct {
