@@ -40,12 +40,12 @@ div#buttonDivSecret {
 	margin-top: 20;
 }
 
-input#phraseInput {
+/*input#phraseInput {
 	display: block;
     margin-left: auto;
     margin-right: auto;
     margin-top: 20px;
-}
+}*/
 
 textarea#textArea {
 	width: 100%;

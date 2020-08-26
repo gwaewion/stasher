@@ -5,6 +5,7 @@ window.onload = function() {
 	var secureDiv = document.createElement( "div" );
 	var checkbox = document.createElement( "input" );
 	var checkboxLabel = document.createElement( "label" );
+	var phraseInputLabel = document.createElement( "lablel" );
 	var phraseInput = document.createElement( "input" );
 	var buttonSecureDiv = document.createElement( "div" );
 	var button = document.createElement( "button" );
@@ -22,7 +23,12 @@ window.onload = function() {
 	checkbox.onclick = showPhraseInput;
 
 	checkboxLabel.setAttribute( "for", "checkbox" );	
-	checkboxLabel.innerHTML = "secure?";
+	checkboxLabel.innerHTML = "   should we encrypt your stuff?<br><br>";
+
+	phraseInputLabel.setAttribute( "id", "phraseInputLabel" );
+	phraseInputLabel.setAttribute( "for", "phraseInput" );
+	phraseInputLabel.innerHTML = "place here you encription phrase: ";
+	phraseInputLabel.style.display = "none";
 
 	phraseInput.setAttribute( "type", "text" );
 	phraseInput.setAttribute( "size", "20" );
@@ -31,14 +37,17 @@ window.onload = function() {
 
 	buttonSecureDiv.setAttribute( "id", "buttonSecureDiv" );
 
-	button.textContent = "send";
+	button.textContent = "let's stash";
 	button.setAttribute( "id", "buttonSend" );
 	button.onclick = send;
+
+	textDiv.innerHTML = "you can stash some stuff here:<br><br>";
 
 	textDiv.append( textArea );
 	rootDiv.append( textDiv );
 	secureDiv.append( checkbox );
 	secureDiv.append( checkboxLabel );
+	secureDiv.append( phraseInputLabel );
 	secureDiv.append( phraseInput );
 	rootDiv.append( secureDiv );
 	buttonSecureDiv.append( button );
@@ -118,11 +127,14 @@ function copy() {
 
 function showPhraseInput() {
 	var checkbox = document.getElementById( "checkbox" );
+	var phraseInputLabel = document.getElementById( "phraseInputLabel" );
 	var phraseInput = document.getElementById( "phraseInput" );
 
 	if ( checkbox.checked == true ){
-		phraseInput.style.display = "block";
+		phraseInputLabel.style.display = "inline";
+		phraseInput.style.display = "inline";
 	} else {
+		phraseInputLabel.style.display = "none";
     	phraseInput.style.display = "none";
 	}
 }
