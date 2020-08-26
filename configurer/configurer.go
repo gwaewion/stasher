@@ -19,6 +19,7 @@ type StasherSection struct {
 	Port				string	`yaml:"port"`
 	Salt				string	`yaml:"salt"`
 	Hostname	string	`yaml:"hostname"`
+	Scheme		string	`yaml:"scheme"`
 }
 
 type CouchDBSection struct {

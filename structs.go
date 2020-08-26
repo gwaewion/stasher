@@ -24,7 +24,8 @@ type DBRecord struct {
 }
 
 type Hint struct {
-	Url	string	`json:"url"`
+	WebUrl	string	`json:"web_url"`
+	ApiUrl	string	`json:"api_url"`
 }
 
 type RootHandlerNew struct {}

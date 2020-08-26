@@ -12,7 +12,7 @@ type Ooops struct {
 
 func LogError( err error ) {
 	if err != nil {
-		log.Fatalf( "Follow error was encountered: ", err )
+		log.Printf( "Follow error was encountered: ", err )
 	}
 }
 
